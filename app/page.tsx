@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { auth, loginWithGoogle, logout } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { GameStatus } from '@/lib/types';
@@ -12,26 +11,27 @@ import { useFirestore } from '@/hooks/use-firestore';
 import { motion, AnimatePresence } from 'motion/react';
 import { Trophy, Play, Settings, LogOut, BrainCircuit, Timer, ShieldCheck } from 'lucide-react';
 
-// Componente auxiliar para detectar o modo admin via URL de forma segura para o Next.js
-function AdminModeDetector({ onAdminDetected }: { onAdminDetected: () => void }) {
-  const searchParams = useSearchParams();
-  useEffect(() => {
-    if (searchParams.get('mode') === 'admin') {
-      onAdminDetected();
-    }
-  }, [searchParams, onAdminDetected]);
-  return null;
-}
-
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [status, setStatus] = useState<GameStatus>('welcome');
   const [playerName, setPlayerName] = useState('');
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
   const { saveToHallOfFame } = useFirestore();
 
   useEffect(() => {
+    // Safely trigger mount state to avoid hydration mismatch
+    const mountTimer = setTimeout(() => {
+      setHasMounted(true);
+      
+      // Detecta se veio do upload das fotos via URL (apenas no cliente após montagem)
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('mode') === 'admin') {
+        setStatus('admin');
+      }
+    }, 0);
+
     const unsubscribe = onAuthStateChanged(auth, (u) => {
       setUser(u);
       setIsAuthReady(true);
@@ -39,7 +39,11 @@ export default function Home() {
         setPlayerName(u.displayName || 'Jogador Anônimo');
       }
     });
-    return () => unsubscribe();
+
+    return () => {
+      clearTimeout(mountTimer);
+      unsubscribe();
+    };
   }, []);
 
   const isAdmin = user?.email === 'gliarte@gmail.com';
@@ -64,7 +68,7 @@ export default function Home() {
     setStatus('ranking');
   };
 
-  if (!isAuthReady) {
+  if (!hasMounted || !isAuthReady) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950">
         <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
@@ -74,9 +78,6 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-bg-deep text-[#F8FAFC] selection:bg-primary/30">
-      <Suspense fallback={null}>
-        <AdminModeDetector onAdminDetected={() => setStatus('admin')} />
-      </Suspense>
       {/* Navigation */}
       <nav className="px-6 py-5 flex justify-between items-center bg-bg-deep border-b-2 border-border sticky top-0 z-40">
         <div 

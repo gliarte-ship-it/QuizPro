@@ -8,7 +8,12 @@ import { Question, HallOfFameEntry, QuestionReport } from '@/lib/types';
 import { Trash2, Edit2, Brain, X, Trophy, ListChecks, Search, Plus, Image as ImageIcon, RefreshCw, AlertTriangle, Mail, CheckCircle2, AlertCircle } from 'lucide-react';
 import { GoogleGenAI, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
+// Utilitário para inicializar o Gemini de forma preguiçosa (evita erros se a chave faltar)
+const getAiClient = () => {
+  const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+  if (!apiKey) return null;
+  return new GoogleGenAI({ apiKey });
+};
 
 // Utility to enforce the user's provided images (expected in /public/thinking/1.jpg to 16.jpg)
 export const getThinkingImageUrl = (q: Partial<Question>) => {
@@ -163,6 +168,12 @@ export default function AdminDashboard() {
   };
 
   const generateWithAI = async () => {
+    const ai = getAiClient();
+    if (!ai) {
+      alert("Configuração de IA (Gemini API Key) ausente ou inválida.");
+      return;
+    }
+
     setGenerating(true);
     let attempts = 0;
     const maxAttempts = 3;
@@ -217,6 +228,12 @@ export default function AdminDashboard() {
   const refreshAllImages = async () => {
     if (!confirm('Deseja atualizar as palavras-chave de imagem de TODAS as questões no banco com base no assunto de cada uma? Isso pode levar algum tempo.')) return;
     
+    const ai = getAiClient();
+    if (!ai) {
+      alert("Configuração de IA (Gemini API Key) ausente.");
+      return;
+    }
+
     setUpdatingImages(true);
     setUpdateProgress({ current: 0, total: questions.length });
     
