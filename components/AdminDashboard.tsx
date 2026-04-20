@@ -310,6 +310,13 @@ export default function AdminDashboard() {
           <Brain className="text-primary" size={40} /> Painel <span className="text-primary">ADMIN</span>
         </h2>
         
+        {/* Indicador de Saúde do Banco de Dados para diagnóstico */}
+        <div className="bg-bg-deep px-4 py-2 rounded-xl border border-border flex items-center gap-3 text-[10px] font-black uppercase tracking-tighter shadow-inner">
+          <div className={`w-2 h-2 rounded-full ${questions.length > 0 ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-amber-500 animate-pulse'}`} />
+          <span className="text-muted">Banco:</span>
+          <span className="text-slate-100">{questions.length} Questões Ativas</span>
+        </div>
+        
         <div className="flex flex-col sm:flex-row items-center gap-4">
           <Link 
             href="/admin/upload"

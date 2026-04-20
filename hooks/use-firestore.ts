@@ -27,9 +27,12 @@ export const useFirestore = () => {
       try {
         await getDocFromServer(doc(db, 'test', 'connection'));
       } catch (err: any) {
-        if (err.message.includes('the client is offline') || err.message.includes('permission-denied')) {
-          console.error("Firestore connection issue:", err);
+        if (err.code === 'permission-denied') {
+          console.error("ERRO CRITICAL: Firebase bloqueou o acesso. Verifique se o domínio da Vercel está autorizado no console do Firebase.");
+        } else if (err.message.includes('the client is offline')) {
+          console.error("ERRO: O cliente está offline ou o Firebase não responde.");
         }
+        console.error("Detalhes do erro Firestore:", err.code, err.message);
       }
     };
     testConnection();
