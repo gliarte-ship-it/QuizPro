@@ -1,0 +1,61 @@
+{
+  "entities": {
+    "Question": {
+      "title": "Question",
+      "description": "Uma pergunta do quiz com 4 opções e nível de dificuldade.",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string", "description": "O enunciado da pergunta." },
+        "options": { 
+          "type": "array", 
+          "items": { "type": "string" },
+          "description": "As 4 opções de resposta." 
+        },
+        "correctIndex": { "type": "integer", "description": "O índice da resposta correta (0-3)." },
+        "level": { "type": "integer", "description": "O nível de dificuldade de 1 a 15." },
+        "source": { "type": "string", "description": "A fonte da informação." },
+        "category": { "type": "string", "description": "A área do conhecimento." },
+        "imageUrl": { "type": "string", "description": "URL de uma imagem relacionada." }
+      },
+      "required": ["text", "options", "correctIndex", "level", "source"]
+    },
+    "HallOfFameEntry": {
+      "title": "Hall of Fame Entry",
+      "description": "Registro de um jogador que completou as 15 perguntas.",
+      "type": "object",
+      "properties": {
+        "playerName": { "type": "string" },
+        "timeInSeconds": { "type": "number" },
+        "date": { "type": "string", "format": "date-time" }
+      },
+      "required": ["playerName", "timeInSeconds", "date"]
+    },
+    "QuestionReport": {
+      "title": "Question Report",
+      "description": "Relatório de erro enviado por um jogador sobre uma questão específica.",
+      "type": "object",
+      "properties": {
+        "questionId": { "type": "string" },
+        "questionText": { "type": "string" },
+        "userFeedback": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" }
+      },
+      "required": ["questionId", "questionText", "date"]
+    }
+  },
+  "firestore": {
+    "/questions/{questionId}": {
+      "schema": "Question",
+      "description": "Coleção de perguntas do sistema."
+    },
+    "/hallOfFame/{entryId}": {
+      "schema": "HallOfFameEntry",
+      "description": "Ranking dos melhores tempos."
+    },
+    "/reports/{reportId}": {
+      "schema": "QuestionReport",
+      "description": "Relatórios de erros enviados pelos usuários."
+    }
+  }
+}

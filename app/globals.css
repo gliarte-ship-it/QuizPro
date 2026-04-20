@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #3B82F6;
+  --color-secondary: #F59E0B;
+  --color-bg-deep: #0F172A;
+  --color-bg-surface: #1E293B;
+  --color-border: #334155;
+  --color-muted: #94A3B8;
+}
+
+body {
+  @apply bg-bg-deep text-[#F8FAFC] antialiased overflow-x-hidden;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+}
+
+.game-container {
+  @apply min-h-screen w-full flex flex-col p-4 md:p-10;
+}
+
+.geometric-card {
+  @apply bg-bg-surface border-2 border-border shadow-2xl;
+}
+
+.glass {
+  @apply bg-bg-surface/80 backdrop-blur-xl border-2 border-border shadow-xl;
+}
+
+.btn-primary {
+  @apply bg-primary hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-2xl border-2 border-primary/20 transition-all active:scale-95 disabled:opacity-40;
+}
+
+.btn-secondary {
+  @apply bg-bg-surface hover:bg-slate-700 text-slate-100 font-bold py-3 px-6 rounded-2xl border-2 border-border transition-all active:scale-95 disabled:opacity-40;
+}
+
+.btn-accent {
+  @apply bg-secondary hover:bg-amber-400 text-slate-950 font-black py-3 px-6 rounded-2xl border-2 border-secondary/20 transition-all active:scale-95;
+}
+
+.btn-danger {
+  @apply bg-rose-600/10 hover:bg-rose-600 text-rose-500 hover:text-white font-bold py-3 px-6 rounded-2xl border-2 border-rose-600/30 transition-all active:scale-95;
+}
+
+.option-btn {
+  @apply w-full bg-bg-surface border-2 border-border p-6 rounded-2xl text-left text-lg font-bold transition-all hover:bg-slate-700 hover:border-primary active:scale-[0.98];
+}
+
+.difficulty-badge {
+  @apply px-3 py-1 rounded-full bg-bg-surface border border-primary text-primary text-[10px] font-black uppercase tracking-widest;
+}

@@ -1,0 +1,92 @@
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: questions
+// Fields:
+//   - text: string (required)
+//   - options: list (required, size 4)
+//   - correctIndex: int (required, 0-3)
+//   - level: int (required, 1-15)
+//   - source: string (required)
+//   - category: string
+//   - imageUrl: string
+//
+// Collection: hallOfFame
+// Fields:
+//   - playerName: string (required, max 50)
+//   - timeInSeconds: number (required, positive)
+//   - date: string (required, ISO 8601)
+//
+// ===============================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.email == "gliarte@gmail.com";
+    }
+
+    function isValidQuestion(data) {
+      return data.text is string && data.text.size() > 0 && data.text.size() < 1000 &&
+             data.options is list && data.options.size() == 4 &&
+             data.correctIndex is int && data.correctIndex >= 0 && data.correctIndex <= 3 &&
+             data.level is int && data.level >= 1 && data.level <= 15 &&
+             data.source is string && data.source.size() > 0 &&
+             (data.category == null || (data.category is string && data.category.size() <= 100)) &&
+             (data.imageUrl == null || (data.imageUrl is string && data.imageUrl.size() <= 500));
+    }
+
+    function isValidHallOfFameEntry(data) {
+      return data.playerName is string && data.playerName.size() > 0 && data.playerName.size() <= 50 &&
+             data.playerEmail is string && data.playerEmail.size() > 0 && data.playerEmail.size() <= 100 &&
+             data.timeInSeconds is number && data.timeInSeconds > 0 &&
+             data.date is string && data.date.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$") &&
+             data.keys().hasAll(['playerName', 'playerEmail', 'timeInSeconds', 'date']) &&
+             data.keys().size() == 4;
+    }
+
+    function isValidReport(data) {
+      return data.questionId is string && data.questionId.size() > 0 && data.questionId.size() <= 128 &&
+             data.questionText is string && data.questionText.size() > 0 && data.questionText.size() <= 2000 &&
+             data.userFeedback is string && data.userFeedback.size() <= 1000 &&
+             (data.userEmail == null || (data.userEmail is string && data.userEmail.size() <= 100)) &&
+             data.date is string && data.date.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$") &&
+             data.keys().hasAll(['questionId', 'questionText', 'date']);
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+    
+    match /{document=**} { allow read, write: if false; }
+
+    match /questions/{questionId} {
+      allow read: if true; 
+      // Allow anyone to create if it's a valid question (this supports AI generated questions during gaps)
+      // BUT only admin can update/delete
+      allow create: if isValidQuestion(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    match /hallOfFame/{entryId} {
+      allow read: if true;
+      allow create: if isValidHallOfFameEntry(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    match /reports/{reportId} {
+      allow read, update, delete: if isAdmin();
+      allow create: if isValidReport(request.resource.data);
+    }
+  }
+}
