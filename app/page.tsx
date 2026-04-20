@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { auth, loginWithGoogle, logout } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { GameStatus } from '@/lib/types';
@@ -11,15 +12,20 @@ import { useFirestore } from '@/hooks/use-firestore';
 import { motion, AnimatePresence } from 'motion/react';
 import { Trophy, Play, Settings, LogOut, BrainCircuit, Timer, ShieldCheck } from 'lucide-react';
 
+// Componente auxiliar para detectar o modo admin via URL de forma segura para o Next.js
+function AdminModeDetector({ onAdminDetected }: { onAdminDetected: () => void }) {
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    if (searchParams.get('mode') === 'admin') {
+      onAdminDetected();
+    }
+  }, [searchParams, onAdminDetected]);
+  return null;
+}
+
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
-  const [status, setStatus] = useState<GameStatus>(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('mode') === 'admin') return 'admin';
-    }
-    return 'welcome';
-  });
+  const [status, setStatus] = useState<GameStatus>('welcome');
   const [playerName, setPlayerName] = useState('');
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -68,6 +74,9 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-bg-deep text-[#F8FAFC] selection:bg-primary/30">
+      <Suspense fallback={null}>
+        <AdminModeDetector onAdminDetected={() => setStatus('admin')} />
+      </Suspense>
       {/* Navigation */}
       <nav className="px-6 py-5 flex justify-between items-center bg-bg-deep border-b-2 border-border sticky top-0 z-40">
         <div 

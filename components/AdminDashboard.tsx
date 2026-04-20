@@ -2,22 +2,38 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useFirestore } from '@/hooks/use-firestore';
 import { Question, HallOfFameEntry, QuestionReport } from '@/lib/types';
-import { Trash2, Edit2, Brain, X, Trophy, ListChecks, Search, Plus, Image as ImageIcon, RefreshCw, AlertTriangle, Mail, CheckCircle2 } from 'lucide-react';
+import { Trash2, Edit2, Brain, X, Trophy, ListChecks, Search, Plus, Image as ImageIcon, RefreshCw, AlertTriangle, Mail, CheckCircle2, AlertCircle } from 'lucide-react';
 import { GoogleGenAI, Type } from "@google/genai";
 
 const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
 
 // Utility to enforce the user's provided images (expected in /public/thinking/1.jpg to 16.jpg)
 export const getThinkingImageUrl = (q: Partial<Question>) => {
-  // Se não houver texto, retornamos a primeira imagem
   if (!q.text) return "/thinking/1.jpg";
-  
-  // Usamos o comprimento do texto para escolher um índice entre 1 e 16
   const imageIndex = (q.text.length % 16) + 1;
   return `/thinking/${imageIndex}.jpg`;
 };
+
+// Mini componente para preview de imagem com fallback
+function QuestionImagePreview({ question }: { question: Question }) {
+  const [imgSrc, setImgSrc] = useState(() => getThinkingImageUrl(question));
+  
+  return (
+    <div className="w-20 h-20 rounded-2xl overflow-hidden bg-bg-deep border-2 border-border shrink-0 hidden sm:block relative">
+      <Image 
+        src={imgSrc} 
+        alt="Preview" 
+        fill
+        className="object-cover" 
+        onError={() => setImgSrc("https://picsum.photos/seed/pensive-person/800/600")}
+        referrerPolicy="no-referrer"
+      />
+    </div>
+  );
+}
 
 export default function AdminDashboard() {
   const { getAllQuestions, addQuestion, updateQuestion, deleteQuestion, getHallOfFame, deleteHallOfFameEntry, getReports, deleteReport } = useFirestore();
@@ -519,10 +535,7 @@ export default function AdminDashboard() {
                         {items.map(q => (
                           <div key={q.id} className="bg-bg-surface border-2 border-border p-6 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 hover:border-primary/50 transition-all hover:shadow-2xl hover:shadow-primary/5 group">
                             <div className="flex items-start gap-6 flex-1 min-w-0">
-                              {/* Mini Preview da Imagem - Reforçando o tema visual */}
-                              <div className="w-20 h-20 rounded-2xl overflow-hidden bg-bg-deep border-2 border-border shrink-0 hidden sm:block">
-                                <img src={getThinkingImageUrl(q)} alt="Preview" className="w-full h-full object-cover" />
-                              </div>
+                              <QuestionImagePreview question={q} />
                               <div className="flex-1 min-w-0 space-y-3">
                                 <div className="flex items-center gap-3">
                                   <span className="text-[10px] bg-primary text-white px-3 py-1 rounded-full font-black uppercase tracking-widest">Nível {q.level}</span>
